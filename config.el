@@ -4,15 +4,11 @@
 ;; Simple and non exhaustive
 ;;; Code:
 
-;; enable 'use-package' macro
-(elpaca elpaca-use-package
-  (elpaca-use-package-mode))
-
 ;;; base config
 
 ;; emacs configuration
 (use-package emacs
-  :ensure nil
+  :straight nil
   :preface
   (defun open-config-file ()
     "Open this file ie 'config.el'."
@@ -32,6 +28,7 @@
   (menu-bar-mode -1)
   (tool-bar-mode -1)
   (scroll-bar-mode -1)
+  (setopt use-short-answers t)
   (setq visible-bell t)
   (setq inhibit-splash-screen t)
   (setq warning-minimum-level :error)   ; only warn on errors
@@ -39,13 +36,14 @@
    native-comp-async-report-warnings-errors nil)
   (setq make-backup-files nil)		; no backup files
   (add-to-list 'default-frame-alist
-               '(font . "0xProto Nerd Font-16"))
+	       '(font . "0xProto Nerd Font-16"))
   (add-hook				; line nums for code
    'prog-mode-hook 'display-line-numbers-mode)
   (setq python-indent-guess-indent-offset-verbose nil))
 
 ;; built in project management
 (use-package project
+  :straight nil
   :preface
   ;; find cmake projects
   (defun project-find-cmake (dir)
@@ -72,17 +70,15 @@
 
 ;; set up shell paths
 (use-package exec-path-from-shell
-  :ensure t
-  :demand t
   :config
   (when (memq window-system '(mac ns x pgtk))
     (exec-path-from-shell-initialize)))
 
 ;; undo
-(use-package undo-fu :ensure t :demand t)
+(use-package undo-fu)
 
 ;; vim bindings
-(use-package evil :ensure t :demand t
+(use-package evil
   :init
   (setq evil-want-keybinding nil)  ; needed for evil-collection
   (setq evil-want-C-u-scroll t)    ; allow scroll up with 'C-u'
@@ -95,103 +91,12 @@
 
 ;; better evil support accross modes
 (use-package evil-collection
-  :ensure t
-  :demand t
   :after evil
   :config
   (evil-collection-init))
 
-;; keybinding helper
-(use-package which-key
-  :ensure t
-  :demand t
-  :config
-  (which-key-mode 1))
-
-;; completion
-
-;; requirement for completion engines
-(use-package compat
-  :ensure t
-  :demand t)
-
-(use-package vertico
-  :ensure t
-  :custom
-  (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
-  (vertico-cycle t)  ;; Enable cycling for `vertico-next/previous'
-  :init
-  (vertico-mode))
-
-;; fancy completion
-(use-package orderless
-  :ensure t
-  :custom
-  (completion-styles '(orderless basic))
-  (completion-category-overrides '((file (styles partial-completion))))
-  (completion-category-defaults nil) ;; use vertico settings
-  (completion-pcm-leading-wildcard t))
-
-;; for ripgrep usage
-;; in rg menu
-;; - "t" -> rerun search, change literal
-;; - "r" -> rerun search, change regexp
-(use-package transient
-  :ensure t)
-
-(use-package rg
-  :after transient
-  :ensure t)
-
-;; theme
-;; (use-package catppuccin-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'catppuccin :no-confirm)
-;;   (setq catppuccin-flavor 'frappe)
-;;   (catppuccin-reload))
-(use-package modus-themes
-  :ensure t
-  :demand t
-  :config
-  (modus-themes-load-theme 'modus-vivendi-tinted))
-
-;; embedded terminal
-(use-package eat
-  :ensure t
-  :after evil-collection general
-  :init
-  (setq eat-term-name "xterm-256color")) ; support key input
-
-;; tree sitter
-(use-package treesit
-  :ensure nil
-  :mode
-  (("\\.tsx\\'" . tsx-ts-mode)
-   ("\\.js\\'"  . typescript-ts-mode)
-   ("\\.mjs\\'" . typescript-ts-mode)
-   ("\\.mts\\'" . typescript-ts-mode)
-   ("\\.cjs\\'" . typescript-ts-mode)
-   ("\\.ts\\'"  . typescript-ts-mode))
-  :config
-  (setq treesit-font-lock-level 4) ; maximum highlighting
-  (setq major-mode-remap-alist
-	'((python-mode . python-ts-mode)
-	  (go-mode . go-ts-mode)
-	  (c-mode . c-ts-mode))))
-
-;; folding
-(use-package treesit-fold
-  :ensure (:host github :repo "emacs-tree-sitter/treesit-fold")
-  :demand t
-  :hook ((typescript-ts-mode . treesit-fold-mode)
-	 (python-ts-mode . treesit-fold-mode)
-	 (markdown-ts-mode . treesit-fold-mode)
-	 (c-ts-mode . treesit-fold-mode)))
-
+;; remapping
 (use-package general
-  :ensure t
-  :demand t
   :config
   (general-evil-setup)
   ;; evil maps
@@ -208,7 +113,7 @@
     :global-prefix "C-SPC")
   (global/leader-keys
     ;; SPC +
-    "SPC" '((lambda () (interactive) (eat-other-window "fish")) :wk "eat fish shell")
+    "SPC" '(vterm-toggle :wk "vterm toggle")
     "o c" '(open-config-file :wk "open config file")
     "c" '(delete-window :wk "delete window")
     "k" '(kill-buffer-and-window :wk "kill buffer and window")
@@ -220,12 +125,12 @@
     "<" '((lambda () (interactive)
 	    (call-interactively #'find-file-other-window)
 	    (evil-window-move-far-left))
-	     :wk "find file other window")
+	  :wk "find file other window")
     ">" '((lambda () (interactive)
 	    (call-interactively #'find-file-other-window)
 	    (evil-window-move-far-right))
-	     :wk "find file other window")
-    "," '(switch-to-buffer :wk "find buffer")
+	  :wk "find file other window")
+    "," '(consult-buffer :wk "find buffer")
     ":" '(execute-extended-command :wk "execute extended command") ; M-x
     "!" '(shell-command :wk "shell command")
     "&" '(async-shell-command :wk "async shell command")
@@ -237,20 +142,97 @@
     "p R" '(project-remember-projects-under :wk "project remember projects under")
     "p !" '(project-shell-command :wk "project shell command")))
 
+;; keybinding helper
+(use-package which-key
+  :config
+  (which-key-mode 1))
+
+;; requirement for completion engines
+(use-package compat)
+
+;; completion
+(use-package vertico
+  :after compat
+  :custom
+  (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
+  (vertico-cycle t)  ;; Enable cycling for `vertico-next/previous'
+  :init
+  (vertico-mode))
+
+;; fancy completion
+(use-package orderless
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles partial-completion))))
+  (completion-category-defaults nil) ;; use vertico settings
+  (completion-pcm-leading-wildcard t))
+
+;; for ripgrep usage
+;; in rg menu
+;; - "t" -> rerun search, change literal
+;; - "r" -> rerun search, change regexp
+(use-package transient)
+
+(use-package rg :after transient)
+
+;; find with previews
+(use-package consult
+  :after vertico
+  :config
+  (setq consult-preview-key "C-.")
+  :bind
+  ("C-x b" . consult-buffer)
+  ("C-x f" . consult-find))
+
+;; theme
+(use-package modus-themes
+  :config
+  (modus-themes-load-theme 'modus-vivendi-tinted))
+
+;; embedded terminal
+(use-package vterm
+  :after (evil-collection general))
+
+(use-package vterm-toggle
+  :after vterm)
+
+;; tree sitter
+(use-package treesit
+  :straight nil
+  :mode
+  (("\\.tsx\\'" . tsx-ts-mode)
+   ("\\.js\\'"  . typescript-ts-mode)
+   ("\\.mjs\\'" . typescript-ts-mode)
+   ("\\.mts\\'" . typescript-ts-mode)
+   ("\\.cjs\\'" . typescript-ts-mode)
+   ("\\.ts\\'"  . typescript-ts-mode))
+  :config
+  (setq treesit-font-lock-level 4) ; maximum highlighting
+  (setq major-mode-remap-alist
+	'((python-mode . python-ts-mode)
+	  (go-mode . go-ts-mode)
+	  (c-mode . c-ts-mode))))
+
+;; folding
+(use-package treesit-fold
+  :straight (:host github :repo "emacs-tree-sitter/treesit-fold")
+  :hook ((typescript-ts-mode . treesit-fold-mode)
+	 (python-ts-mode . treesit-fold-mode)
+	 (markdown-ts-mode . treesit-fold-mode)
+	 (c-ts-mode . treesit-fold-mode)))
+
 ;;; language configs
 
 ;; parens coloring
 (use-package rainbow-delimiters
-  :ensure t
   :hook
   (prog-mode . rainbow-delimiters-mode))
 
 ;; parenthesis wrangling
-; `M-r' raise sexp
-; `M-s' splice sexp
-; `M-S' split sexp
+					; `M-r' raise sexp
+					; `M-s' splice sexp
+					; `M-S' split sexp
 (use-package paredit
-  :ensure t
   :commands paredit-mode
   :hook
   (clojure-ts-mode . paredit-mode)
@@ -258,19 +240,16 @@
 
 ;; better evil integration
 (use-package enhanced-evil-paredit
-  :ensure t
   :commands enhanced-evil-paredit-mode
   :hook (paredit-mode . enhanced-evil-paredit-mode))
 
 ;; completion
 (use-package company
-  :ensure t
   :hook
   (prog-mode . company-mode))
 
 ;; snippets
 (use-package yasnippet
-  :ensure t
   :config
   (setq yas-snippet-dirs
 	'("~/.config/emacs/snippets"))
@@ -279,6 +258,7 @@
 
 ;; lsp
 (use-package eglot
+  :straight nil
   :config
   (add-to-list 'eglot-ignored-server-capabilites :hoverProvider)
   (add-to-list 'eglot-server-programs
@@ -286,23 +266,24 @@
 
 ;; need to be in insert mode to quit
 (use-package eldoc-box
-  :ensure t
   :after eglot
   :config
   (general-define-key
-    :states 'normal
-    :keymaps 'eglot-mode-map
-    "K" 'eldoc-box-help-at-point))
+   :states 'normal
+   :keymaps 'eglot-mode-map
+   "K" 'eldoc-box-help-at-point))
 
 ;; linting
 (use-package flycheck
-  :ensure t
   :hook
   (prog-mode . flycheck-mode))
 
+;; git
+(use-package magit
+  :after (evil-collection transient))
+
 ;; docker
 (use-package docker
-  :ensure t
   :custom
   (docker-command "podman")
   (docker-compose-command "podman-compose")
@@ -311,24 +292,22 @@
 
 ;; markdown
 (use-package markdown-ts-mode
-  :ensure t
   :mode ("\\.md\\'" . markdown-ts-mode))
 
 ;; clojure
-(use-package clojure-ts-mode
-  :ensure t)
+(use-package clojure-ts-mode)
 
 (use-package cider
-  :ensure t
   :config
   (general-define-key
-    :states '(normal visual)
-    :keymaps 'clojure-ts-mode-map
-    :prefix "SPC"
-    "n" '(cider-ns-map :wk "cider ns map")))
+   :states '(normal visual)
+   :keymaps 'clojure-ts-mode-map
+   :prefix "SPC"
+   "n" '(cider-ns-map :wk "cider ns map")))
 
 ;; python
 (use-package python
+  :straight nil
   :preface
   (defvar python-last-buffer nil
     "The last python buffer to call the repl.")
@@ -358,20 +337,17 @@
 	("C-c C-z" . +python/goto-python-buffer)))
 
 ;; nim
-(use-package nim-mode
-  :ensure t)
+(use-package nim-mode)
 
 ;; odin
 (use-package odin-mode
-   :ensure (:host github :repo "mattt-b/odin-mode"))
+  :straight (:host github :repo "mattt-b/odin-mode"))
 
 ;; scheme
-(use-package geiser-chez
-  :ensure t)
+(use-package geiser-chez)
 
 ;; direnv
 (use-package envrc
-  :ensure t
   :config
   (envrc-global-mode))
 
