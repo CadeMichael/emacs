@@ -14,7 +14,7 @@
     "Open this file ie 'config.el'."
     (interactive)
     (find-file (expand-file-name "config.el" user-emacs-directory)))
-  (defun open-note-file ()
+  (defun open-md-note-file ()
     "Open a note file."
     (interactive)
     (find-file "~/zkast"))
@@ -67,6 +67,13 @@
   (add-hook 'project-find-functions 'project-find-cmake)
   (add-hook 'project-find-functions 'project-find-uv)
   (add-hook 'project-find-functions 'project-find-README))
+
+;; org
+(use-package org
+  :straight nil
+  :config
+  (setq org-log-done t) ; mark `DONE' tasks `CLOSED'
+  (setq org-agenda-files (list (expand-file-name "org/" user-emacs-directory))))
 
 ;; set up shell paths
 (use-package exec-path-from-shell
@@ -126,6 +133,11 @@
     "c" '(delete-window :wk "delete window")
     "k" '(kill-buffer-and-window :wk "kill buffer and window")
     "h l" '(hl-line-mode :wk "hl line mode")
+    "a" '(org-agenda :wk "org-agenda")
+    "A" '((lambda ()
+	    (interactive)
+	    (find-file
+	     (expand-file-name "org/" user-emacs-directory))) :wk "org-agenda")
     "W" '(toggle-truncate-lines :wk "toggle truncate lines")
     ";" '(comment-line :wk "comment line")
     "/" '(rg-literal :wk "rg literal")
@@ -194,9 +206,15 @@
   ("C-x f" . consult-find))
 
 ;; theme
-(use-package modus-themes
+(use-package zenburn-theme
   :config
-  (modus-themes-load-theme 'modus-vivendi-tinted))
+  (load-theme 'zenburn t))
+
+;; modeline
+(use-package doom-modeline
+  :config
+  (setq doom-modeline-icon nil)
+  :init (doom-modeline-mode 1))
 
 ;; embedded terminal
 (use-package vterm
@@ -232,7 +250,7 @@
 	 (markdown-ts-mode . treesit-fold-mode)
 	 (c-ts-mode . treesit-fold-mode)))
 
-;;; language configs
+;; language configs
 
 ;; interpreter bindings
 (use-package comint
@@ -296,7 +314,10 @@
 
 ;; git
 (use-package magit
-  :after (evil-collection transient))
+  :after (evil-collection transient)
+  :config
+  (global/leader-keys
+    "g" '(magit-status :wk "magit-status")))
 
 ;; docker
 (use-package docker
