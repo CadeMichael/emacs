@@ -80,7 +80,8 @@
 ;; vim bindings
 (use-package evil
   :init
-  (setq evil-want-keybinding nil)  ; needed for evil-collection
+  (setq evil-want-keybinding nil)  ; needed for `evil-collection'
+  (setq evil-want-integration t)   ; needed for `evil-collection'
   (setq evil-want-C-u-scroll t)    ; allow scroll up with 'C-u'
   (setq evil-want-C-d-scroll t)    ; allow scroll down with 'C-d'
   (setq evil-undo-system 'undo-fu) ; undo system for 'C-r'
@@ -95,6 +96,13 @@
   :config
   (evil-collection-init))
 
+;; fixing evil maps
+;;; repls
+(use-package comint
+  :straight nil
+  :bind
+  ("C-<return>" . comint-send-input))
+
 ;; remapping
 (use-package general
   :config
@@ -102,7 +110,7 @@
   ;; evil maps
   (general-nmap
     "U" 'evil-redo)
-  (general-nmap 'eat-mode-map
+  (general-nmap 'vterm-mode-map
     "q" 'quit-window)
   ;; global keybindings
   (general-create-definer global/leader-keys
@@ -167,12 +175,13 @@
   (completion-category-defaults nil) ;; use vertico settings
   (completion-pcm-leading-wildcard t))
 
+;; required package for completion
+(use-package transient)
+
 ;; for ripgrep usage
 ;; in rg menu
 ;; - "t" -> rerun search, change literal
 ;; - "r" -> rerun search, change regexp
-(use-package transient)
-
 (use-package rg :after transient)
 
 ;; find with previews
@@ -193,6 +202,7 @@
 (use-package vterm
   :after (evil-collection general))
 
+;; smart term toggling
 (use-package vterm-toggle
   :after vterm)
 
@@ -211,7 +221,8 @@
   (setq major-mode-remap-alist
 	'((python-mode . python-ts-mode)
 	  (go-mode . go-ts-mode)
-	  (c-mode . c-ts-mode))))
+	  (c-mode . c-ts-mode)
+	  (clojure-mode . clojure-ts-mode))))
 
 ;; folding
 (use-package treesit-fold
@@ -223,15 +234,20 @@
 
 ;;; language configs
 
+;; interpreter bindings
+(use-package comint
+  :straight nil
+  :bind ("C-RET" . comint-))
+
 ;; parens coloring
 (use-package rainbow-delimiters
   :hook
   (prog-mode . rainbow-delimiters-mode))
 
 ;; parenthesis wrangling
-					; `M-r' raise sexp
-					; `M-s' splice sexp
-					; `M-S' split sexp
+;; `M-r' raise sexp
+;; `M-s' splice sexp
+;; `M-S' split sexp
 (use-package paredit
   :commands paredit-mode
   :hook
@@ -290,21 +306,6 @@
   (docker-container-tramp-method "docker")
   :bind ("C-c d" . docker))
 
-;; markdown
-(use-package markdown-ts-mode
-  :mode ("\\.md\\'" . markdown-ts-mode))
-
-;; clojure
-(use-package clojure-ts-mode)
-
-(use-package cider
-  :config
-  (general-define-key
-   :states '(normal visual)
-   :keymaps 'clojure-ts-mode-map
-   :prefix "SPC"
-   "n" '(cider-ns-map :wk "cider ns map")))
-
 ;; python
 (use-package python
   :straight nil
@@ -336,6 +337,21 @@
 	("C-c r" . python-shell-restart)
 	("C-c C-z" . +python/goto-python-buffer)))
 
+;; markdown
+(use-package markdown-ts-mode
+  :mode ("\\.md\\'" . markdown-ts-mode))
+
+;; clojure
+(use-package clojure-ts-mode)
+
+;; clojure repl
+(use-package cider
+  :after clojure-ts-mode
+  :config
+  (global/leader-keys
+   :keymaps 'clojure-ts-mode-map
+   "n" '(cider-ns-map :wk "cider ns map")))
+
 ;; nim
 (use-package nim-mode)
 
@@ -350,5 +366,14 @@
 (use-package envrc
   :config
   (envrc-global-mode))
+
+;; debugging
+;;; dependency
+(use-package repeat
+  :custom
+  (repeat-mode +1))
+
+;;; debug adapter
+(use-package dape)
 
 ;;; config.el ends here
