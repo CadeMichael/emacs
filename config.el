@@ -268,6 +268,9 @@
 ;; running programs
 (use-package quickrun
   :config
+  ;; must kill window to reset default directory
+  (general-nmap 'quickrun--mode-map
+	"q" 'kill-buffer-and-window)
   ;; odin
   (quickrun-add-command "odin"
    '((:command . "odin")
