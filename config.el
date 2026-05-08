@@ -28,6 +28,7 @@
   (menu-bar-mode -1)
   (tool-bar-mode -1)
   (scroll-bar-mode -1)
+  (setq-default tab-width 4)
   (setopt use-short-answers t)
   (setq visible-bell t)
   (setq inhibit-splash-screen t)
@@ -35,6 +36,7 @@
   (setq                                 ; no warnings
    native-comp-async-report-warnings-errors nil)
   (setq make-backup-files nil)		; no backup files
+  (setq compile-command "just build")	; just easier compilation
   (add-to-list 'default-frame-alist
 	       '(font . "0xProto Nerd Font-16"))
   (add-hook				; line nums for code
@@ -128,20 +130,26 @@
     :global-prefix "C-SPC")
   (global/leader-keys
     ;; SPC +
+	;; terminal
     "SPC" '(vterm-toggle :wk "vterm toggle")
+	;; config
     "o c" '(open-config-file :wk "open config file")
-    "c" '(delete-window :wk "delete window")
-    "k" '(kill-buffer-and-window :wk "kill buffer and window")
-    "h l" '(hl-line-mode :wk "hl line mode")
+	;; org
     "a" '(org-agenda :wk "org-agenda")
     "A" '((lambda ()
 	    (interactive)
 	    (find-file
 	     (expand-file-name "org/" user-emacs-directory))) :wk "org-agenda")
+	;; buffer manipulation
+    "q" '(delete-window :wk "delete window")
+    "k" '(kill-buffer-and-window :wk "kill buffer and window")
+    "h l" '(hl-line-mode :wk "hl line mode")
     "W" '(toggle-truncate-lines :wk "toggle truncate lines")
     ";" '(comment-line :wk "comment line")
+	;; finding files or regex
     "/" '(rg-literal :wk "rg literal")
     "." '(find-file :wk "find file")
+    "," '(consult-buffer :wk "find buffer")
     "<" '((lambda () (interactive)
 	    (call-interactively #'find-file-other-window)
 	    (evil-window-move-far-left))
@@ -150,14 +158,19 @@
 	    (call-interactively #'find-file-other-window)
 	    (evil-window-move-far-right))
 	  :wk "find file other window")
-    "," '(consult-buffer :wk "find buffer")
+	;; executing commands
+    "c c" '(compile :wk "compile")
+    "b r" '(quickrun :wk "quickrun") ; might need `quickrun-shell' to update dir
+    "b s" '(quickrun-shell :wk "quickrun-shell")
     ":" '(execute-extended-command :wk "execute extended command") ; M-x
     "!" '(shell-command :wk "shell command")
     "&" '(async-shell-command :wk "async shell command")
     "x" '(execute-extended-command :wk "M-x")
+	;; project commands
     "p s" '(project-switch-project :wk "project switch")
     "p k" '(project-kill-buffers :wk "project kill buffers")
     "p f" '(project-find-file :wk "project find file")
+    "p c" '(project-compile :wk "project compile")
     "p F" '(project-forget-project :wk "project forget")
     "p R" '(project-remember-projects-under :wk "project remember projects under")
     "p !" '(project-shell-command :wk "project shell command")))
@@ -228,7 +241,7 @@
 (use-package treesit
   :straight nil
   :mode
-  (("\\.tsx\\'" . tsx-ts-mode)
+  (;("\\.tsx\\'" . tsx-ts-mode)
    ("\\.js\\'"  . typescript-ts-mode)
    ("\\.mjs\\'" . typescript-ts-mode)
    ("\\.mts\\'" . typescript-ts-mode)
@@ -252,10 +265,28 @@
 
 ;; language configs
 
-;; interpreter bindings
-(use-package comint
-  :straight nil
-  :bind ("C-RET" . comint-))
+;; running programs
+(use-package quickrun
+  :config
+  ;; odin
+  (quickrun-add-command "odin"
+   '((:command . "odin")
+     (:exec . ("%c build . -out:%e" "%e"))
+     (:tempfile . nil)
+	 (:remove . ("%e")))
+   :mode 'odin-mode)
+  ;; python
+  (quickrun-add-command "uv"
+	'((:command . "uv")
+	  (:exec . ("uv run %s"))
+	  (:tempfile . nil))
+	:default "python")
+  ;; typescript
+  (quickrun-add-command "bun"
+	'((:command . "bun")
+      (:exec . "%c %s")
+	  (:tempfile . nil))
+	:default "typescript"))
 
 ;; parens coloring
 (use-package rainbow-delimiters
@@ -378,7 +409,9 @@
 
 ;; odin
 (use-package odin-mode
-  :straight (:host github :repo "mattt-b/odin-mode"))
+  :straight (:host github :repo "mattt-b/odin-mode")
+  :hook
+  (odin-mode . (lambda () (setq-local compile-command "odin build ."))))
 
 ;; scheme
 (use-package geiser-chez)
