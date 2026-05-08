@@ -24,6 +24,8 @@
   (read-extended-command-predicate #'command-completion-default-include-p)
   (minibuffer-prompt-properties
    '(read-only t cursor-intangible t face minibuffer-prompt))
+  (tab-always-indent 'complete)
+  (text-mode-ispell-word-completion nil)
   :config
   (menu-bar-mode -1)
   (tool-bar-mode -1)
@@ -40,7 +42,7 @@
   (add-to-list 'default-frame-alist
 	       '(font . "0xProto Nerd Font-16"))
   (add-hook				; line nums for code
-   'prog-mode-hook 'display-line-numbers-mode)
+   'prog-mode-hook #'display-line-numbers-mode)
   (setq python-indent-guess-indent-offset-verbose nil))
 
 ;; built in project management
@@ -52,6 +54,12 @@
     (when-let ((root (locate-dominating-file dir "CMakeLists.txt")))
       (cons 'cmake-lists root)))
   (cl-defmethod project-root ((project (head cmake-lists)))
+    (cdr project))
+  ;; find lakefile projects
+  (defun project-find-lakefile (dir)
+    (when-let ((root (locate-dominating-file dir "lakefile.toml")))
+      (cons 'lakefile-lists root)))
+  (cl-defmethod project-root ((project (head lakefile-lists)))
     (cdr project))
   ;; find uv projects
   (defun project-find-uv (dir)
@@ -66,9 +74,10 @@
   (cl-defmethod project-root ((project (head README-lists)))
     (cdr project))
   :config
-  (add-hook 'project-find-functions 'project-find-cmake)
-  (add-hook 'project-find-functions 'project-find-uv)
-  (add-hook 'project-find-functions 'project-find-README))
+  (add-hook 'project-find-functions #'project-find-cmake)
+  (add-hook 'project-find-functions #'project-find-lakefile)
+  (add-hook 'project-find-functions #'project-find-uv)
+  (add-hook 'project-find-functions #'project-find-README))
 
 ;; org
 (use-package org
@@ -312,9 +321,13 @@
   :hook (paredit-mode . enhanced-evil-paredit-mode))
 
 ;; completion
-(use-package company
-  :hook
-  (prog-mode . company-mode))
+(use-package corfu
+  :custom
+  (corfu-cycle t)
+  (corfu-quit-at-boundary t)
+  (corfu-quit-no-match nil)
+  :init
+  (global-corfu-mode))
 
 ;; snippets
 (use-package yasnippet
@@ -328,7 +341,7 @@
 (use-package eglot
   :straight nil
   :config
-  (add-to-list 'eglot-ignored-server-capabilites :hoverProvider)
+  (add-to-list 'eglot-ignored-server-capabilities :hoverProvider)
   (add-to-list 'eglot-server-programs
 	       '(nim-mode "nimlsp")))
 
@@ -407,6 +420,9 @@
    :keymaps 'clojure-ts-mode-map
    "n" '(cider-ns-map :wk "cider ns map")))
 
+;; lean4
+(use-package nael)
+
 ;; nim
 (use-package nim-mode)
 
@@ -427,8 +443,9 @@
 ;; debugging
 ;;; dependency
 (use-package repeat
+  :straight nil
   :custom
-  (repeat-mode +1))
+  (repeat-mode t))
 
 ;;; debug adapter
 (use-package dape)
