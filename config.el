@@ -41,6 +41,8 @@
   (setq compile-command "just build")	; just easier compilation
   (add-to-list 'default-frame-alist
 	       '(font . "0xProto Nerd Font-16"))
+  (add-hook				; line highlighting for code
+   'prog-mode-hook #'hl-line-mode)
   (add-hook				; line nums for code
    'prog-mode-hook #'display-line-numbers-mode)
   (setq python-indent-guess-indent-offset-verbose nil))
