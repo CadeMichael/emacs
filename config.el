@@ -67,17 +67,11 @@
       (cons 'uv-lists root)))
   (cl-defmethod project-root ((project (head uv-lists)))
     (cdr project))
-  ;; find projects w/ a README
-  (defun project-find-README (dir)
-    (when-let ((root (locate-dominating-file dir "README.md")))
-      (cons 'README-lists root)))
-  (cl-defmethod project-root ((project (head README-lists)))
-    (cdr project))
   :config
   (add-hook 'project-find-functions #'project-find-cmake)
   (add-hook 'project-find-functions #'project-find-lakefile)
-  (add-hook 'project-find-functions #'project-find-uv)
-  (add-hook 'project-find-functions #'project-find-README))
+  (add-hook 'project-find-functions #'project-find-uv))
+  
 
 ;; org
 (use-package org
@@ -260,7 +254,7 @@
   (setq treesit-font-lock-level 4) ; maximum highlighting
   (setq major-mode-remap-alist
 	'((python-mode . python-ts-mode)
-	  (go-mode . go-ts-mode)
+	  ;; (go-mode . go-ts-mode)
 	  (c-mode . c-ts-mode)
 	  (clojure-mode . clojure-ts-mode))))
 
@@ -325,9 +319,18 @@
   :custom
   (corfu-cycle t)
   (corfu-quit-at-boundary t)
-  (corfu-quit-no-match nil)
+  (corfu-quit-no-match t)
   :init
   (global-corfu-mode))
+
+;; completion sources
+(use-package cape
+  ;; 'C-c p ?' to for help.
+  :bind ("C-c p" . cape-prefix-map)
+  :init
+  ;; globally add to value of `completion-at-point-functions'
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file))
 
 ;; snippets
 (use-package yasnippet
@@ -420,8 +423,18 @@
    :keymaps 'clojure-ts-mode-map
    "n" '(cider-ns-map :wk "cider ns map")))
 
+;; go
+(use-package go-ts-mode
+  :straight nil
+  :mode "\\.go\\'"
+  :custom
+  (go-ts-mode-indent-offset 4))
+
 ;; lean4
-(use-package nael)
+(use-package nael
+  :hook
+  (nael-mode . (lambda ()
+		 (setq-local indent-tabs-mode nil))))
 
 ;; nim
 (use-package nim-mode)
