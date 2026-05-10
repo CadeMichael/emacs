@@ -124,8 +124,6 @@
   ;; evil maps
   (general-nmap
     "U" 'evil-redo)
-  (general-nmap 'vterm-mode-map
-    "q" 'quit-window)
   ;; global keybindings
   (general-create-definer global/leader-keys
     :defer t
@@ -224,9 +222,11 @@
   ("C-x f" . consult-find))
 
 ;; theme
-(use-package zenburn-theme
+(use-package doom-themes
   :config
-  (load-theme 'zenburn t))
+  (load-theme 'doom-one t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
 
 ;; modeline
 (use-package doom-modeline
@@ -236,7 +236,10 @@
 
 ;; embedded terminal
 (use-package vterm
-  :after (evil-collection general))
+  :after (evil-collection general)
+  :config
+  (general-nmap 'vterm-mode-map
+    "q" 'quit-window))
 
 ;; smart term toggling
 (use-package vterm-toggle
@@ -245,28 +248,21 @@
 ;; tree sitter
 (use-package treesit
   :straight nil
-  :mode
-  (;("\\.tsx\\'" . tsx-ts-mode)
-   ("\\.js\\'"  . typescript-ts-mode)
-   ("\\.mjs\\'" . typescript-ts-mode)
-   ("\\.mts\\'" . typescript-ts-mode)
-   ("\\.cjs\\'" . typescript-ts-mode)
-   ("\\.ts\\'"  . typescript-ts-mode))
   :config
   (setq treesit-font-lock-level 4) ; maximum highlighting
   (setq major-mode-remap-alist
 	'((python-mode . python-ts-mode)
-	  ;; (go-mode . go-ts-mode)
 	  (c-mode . c-ts-mode)
 	  (clojure-mode . clojure-ts-mode))))
 
 ;; folding
 (use-package treesit-fold
   :straight (:host github :repo "emacs-tree-sitter/treesit-fold")
-  :hook ((typescript-ts-mode . treesit-fold-mode)
-	 (python-ts-mode . treesit-fold-mode)
-	 (markdown-ts-mode . treesit-fold-mode)
-	 (c-ts-mode . treesit-fold-mode)))
+  :hook
+  ((typescript-ts-mode . treesit-fold-mode)
+   (python-ts-mode . treesit-fold-mode)
+   (markdown-ts-mode . treesit-fold-mode)
+   (c-ts-mode . treesit-fold-mode)))
 
 ;; language configs
 
@@ -364,12 +360,20 @@
   :hook
   (prog-mode . flycheck-mode))
 
-;; git
+;; git interface
 (use-package magit
   :after (evil-collection transient)
   :config
   (global/leader-keys
     "g" '(magit-status :wk "magit-status")))
+
+;; git visual and navigation
+(use-package git-gutter
+  :config
+  (global-git-gutter-mode t)
+  (general-nmap
+	"[ d" '(git-gutter:previous-hunk :wk "git-gutter:prev-hunk")
+	"] d" '(git-gutter:next-hunk :wk "git-gutter:next-hunk")))
 
 ;; docker
 (use-package docker
@@ -449,6 +453,16 @@
 
 ;; scheme
 (use-package geiser-chez)
+
+;; typescript
+(use-package typescript-ts-mode
+  :straight nil
+  :mode
+  (("\\.js\\'"  . typescript-ts-mode)
+   ("\\.mjs\\'" . typescript-ts-mode)
+   ("\\.mts\\'" . typescript-ts-mode)
+   ("\\.cjs\\'" . typescript-ts-mode)
+   ("\\.ts\\'"  . typescript-ts-mode)))
 
 ;; direnv
 (use-package envrc
