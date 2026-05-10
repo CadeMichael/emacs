@@ -479,4 +479,10 @@
 ;;; debug adapter
 (use-package dape)
 
+;; org
+(use-package org
+  :straight nil
+  :config
+  (require 'org-tempo))
+
 ;;; config.el ends here
