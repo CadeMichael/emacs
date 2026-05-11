@@ -393,14 +393,6 @@
 	"[ d" '(diff-hl-previous-hunk :wk "diff-hl-previous-hunk"))
   (global-diff-hl-mode))
 
-;; jumping without lsp
-(use-package dumb-jump
-  :custom
-  (dumb-jump-prefer-searcher 'rg)
-  (xref-show-definitions-function #'consult-xref)
-  :config
-  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
-
 ;; docker
 (use-package docker
   :custom
