@@ -315,7 +315,11 @@
   :commands paredit-mode
   :hook
   (clojure-ts-mode . paredit-mode)
-  (emacs-lisp-mode . paredit-mode))
+  (emacs-lisp-mode . paredit-mode)
+  :config
+  (dolist (lisp-maps (list clojure-ts-mode-map emacs-lisp-mode-map))
+    (bind-key "M-l" #'paredit-forward-slurp-sexp lisp-maps)
+	(bind-key "M-h" #'paredit-backward-slurp-sexp lisp-maps)))
 
 ;; better evil integration
 (use-package enhanced-evil-paredit
