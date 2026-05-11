@@ -6,6 +6,18 @@
 
 ;;; base config
 
+;; compile angle
+(setq load-prefer-newer t)
+
+(use-package compile-angel
+  :demand t
+  :config
+  (setq compile-angel-verbose t)
+  (push "/init.el" compile-angel-excluded-files)
+  (push "/early-init.el" compile-angel-excluded-files)
+  (push "/config.el" compile-angel-excluded-files)
+  (compile-angel-on-load-mode 1))
+
 ;; emacs configuration
 (use-package emacs
   :straight nil
@@ -37,13 +49,13 @@
   (setq warning-minimum-level :error)   ; only warn on errors
   (setq                                 ; no warnings
    native-comp-async-report-warnings-errors nil)
-  (setq make-backup-files nil)		; no backup files
+  (setq make-backup-files nil)			; no backup files
   (setq compile-command "just build")	; just easier compilation
   (add-to-list 'default-frame-alist
-	       '(font . "0xProto Nerd Font-16"))
-  (add-hook				; line highlighting for code
+			   '(font . "0xProto Nerd Font-16"))
+  (add-hook								; line highlighting for code
    'prog-mode-hook #'hl-line-mode)
-  (add-hook				; line nums for code
+  (add-hook								; line nums for code
    'prog-mode-hook #'display-line-numbers-mode)
   (setq python-indent-guess-indent-offset-verbose nil))
 
@@ -134,7 +146,7 @@
   (global/leader-keys
     ;; SPC +
 	;; terminal
-    "SPC" '(vterm-toggle :wk "vterm toggle")
+    "SPC" '(ghostel :wk "ghostel")
 	;; config
     "o c" '(open-config-file :wk "open config file")
 	;; org
@@ -145,13 +157,14 @@
 	     (expand-file-name "org/" user-emacs-directory))) :wk "org-agenda")
 	;; buffer manipulation
     "q" '(delete-window :wk "delete window")
+	"D" '(diff-hl-diff-goto-hunk :wk "diff-hl-diff-goto-hunk")
     "k" '(kill-buffer-and-window :wk "kill buffer and window")
-    "h l" '(hl-line-mode :wk "hl line mode")
     "W" '(toggle-truncate-lines :wk "toggle truncate lines")
     ";" '(comment-line :wk "comment line")
 	;; finding files or regex
     "/" '(rg-literal :wk "rg literal")
-    "." '(find-file :wk "find file")
+    "f" '(find-file :wk "find file")
+	"." '(dired :wk "dired")
     "," '(consult-buffer :wk "find buffer")
     "<" '((lambda () (interactive)
 	    (call-interactively #'find-file-other-window)
@@ -170,6 +183,7 @@
     "&" '(async-shell-command :wk "async shell command")
     "x" '(execute-extended-command :wk "M-x")
 	;; project commands
+	"p SPC" '(ghostel-project :wk "ghostel-project")
     "p s" '(project-switch-project :wk "project switch")
     "p k" '(project-kill-buffers :wk "project kill buffers")
     "p f" '(project-find-file :wk "project find file")
@@ -235,15 +249,11 @@
   :init (doom-modeline-mode 1))
 
 ;; embedded terminal
-(use-package vterm
+(use-package ghostel
   :after (evil-collection general)
   :config
-  (general-nmap 'vterm-mode-map
+  (general-nmap 'ghostel-mode-map
     "q" 'quit-window))
-
-;; smart term toggling
-(use-package vterm-toggle
-  :after vterm)
 
 ;; tree sitter
 (use-package treesit
@@ -368,12 +378,14 @@
     "g" '(magit-status :wk "magit-status")))
 
 ;; git visual and navigation
-(use-package git-gutter
+(use-package diff-hl
+  :after (general)
   :config
-  (global-git-gutter-mode t)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh)
   (general-nmap
-	"[ d" '(git-gutter:previous-hunk :wk "git-gutter:prev-hunk")
-	"] d" '(git-gutter:next-hunk :wk "git-gutter:next-hunk")))
+	"] d" '(diff-hl-next-hunk :wk "diff-hl-next hunk")
+	"[ d" '(diff-hl-previous-hunk :wk "diff-hl-previous-hunk"))
+  (global-diff-hl-mode))
 
 ;; docker
 (use-package docker
