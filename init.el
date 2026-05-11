@@ -1,3 +1,8 @@
+;;; main-init --- Cade's Emacs Config -*- lexical-binding: t; -*-
+;;; Commentary:
+;; set up straight.el and load config.el.
+;;; Code:
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name
@@ -19,3 +24,5 @@
 (setq straight-use-package-by-default t)
 
 (load (expand-file-name "config.el" user-emacs-directory))
+
+;;; init.el ends here

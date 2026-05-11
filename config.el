@@ -150,7 +150,8 @@
 	;; config
     "o c" '(open-config-file :wk "open config file")
 	;; org
-    "a" '(org-agenda :wk "org-agenda")
+    "a a" '(org-agenda :wk "org-agenda")
+    "a /" '(consult-org-agenda :wk "consult-org-agenda")
     "A" '((lambda ()
 	    (interactive)
 	    (find-file
@@ -312,6 +313,7 @@
 ;; `M-s' splice sexp
 ;; `M-S' split sexp
 (use-package paredit
+  :after (clojure-ts-mode cider)
   :commands paredit-mode
   :hook
   (clojure-ts-mode . paredit-mode)
@@ -390,6 +392,14 @@
 	"] d" '(diff-hl-next-hunk :wk "diff-hl-next hunk")
 	"[ d" '(diff-hl-previous-hunk :wk "diff-hl-previous-hunk"))
   (global-diff-hl-mode))
+
+;; jumping without lsp
+(use-package dumb-jump
+  :custom
+  (dumb-jump-prefer-searcher 'rg)
+  (xref-show-definitions-function #'consult-xref)
+  :config
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
 
 ;; docker
 (use-package docker
