@@ -146,7 +146,7 @@
   (global/leader-keys
     ;; SPC +
 	;; terminal
-    "SPC" '(ghostel :wk "ghostel")
+    "SPC" '(+/ghostel-other-window :wk "+/ghostel-other-window")
 	;; config
     "o c" '(open-config-file :wk "open config file")
 	;; org
@@ -175,6 +175,11 @@
 	    (call-interactively #'find-file-other-window)
 	    (evil-window-move-far-right))
 	  :wk "find file other window")
+	;; lsp
+	"e" '((lambda () (interactive)
+			(if (eglot-managed-p)
+				(call-interactively #'eglot-shutdown)
+			  (call-interactively #'eglot))) :wk "eglot")
 	;; executing commands
     "c c" '(compile :wk "compile")
     "b r" '(quickrun :wk "quickrun") ; might need `quickrun-shell' to update dir
@@ -191,7 +196,8 @@
     "p c" '(project-compile :wk "project compile")
     "p F" '(project-forget-project :wk "project forget")
     "p R" '(project-remember-projects-under :wk "project remember projects under")
-    "p !" '(project-shell-command :wk "project shell command")))
+    "p !" '(project-shell-command :wk "project shell command")
+	"p &" '(project-async-shell-command :wk "project async shell command")))
 
 ;; keybinding helper
 (use-package which-key
@@ -253,6 +259,21 @@
 (use-package ghostel
   :after (evil-collection general)
   :config
+  (defun +/ghostel-other-window ()
+	(interactive)
+	(let* ((display-buffer-alist
+			`(("\\*ghostel"
+			   (display-buffer-pop-up-window)
+			   (window-height . 0.5))))
+		   (ghostel-buf (string-match-p "\\*ghostel" (buffer-name)))
+		   (buf (cl-find-if
+				 (lambda (b)
+				   (string-match-p "\\*ghostel" (buffer-name b)))
+				 (buffer-list))))
+	  (cond
+	   (ghostel-buf (delete-window))
+	   (buf (switch-to-buffer-other-window buf))
+	   (t (ghostel)))))
   (general-nmap 'ghostel-mode-map
     "q" 'quit-window))
 
