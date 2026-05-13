@@ -12,7 +12,7 @@
 (use-package compile-angel
   :demand t
   :config
-  (setq compile-angel-verbose t)
+  (setq compile-angel-verbose nil)
   (push "/init.el" compile-angel-excluded-files)
   (push "/early-init.el" compile-angel-excluded-files)
   (push "/config.el" compile-angel-excluded-files)
@@ -271,7 +271,7 @@
 				   (string-match-p "\\*ghostel" (buffer-name b)))
 				 (buffer-list))))
 	  (cond
-	   (ghostel-buf (delete-window))
+	   (ghostel-buf (quit-window))
 	   (buf (switch-to-buffer-other-window buf))
 	   (t (ghostel)))))
   (general-nmap 'ghostel-mode-map
@@ -522,6 +522,8 @@
 (use-package org
   :straight nil
   :config
-  (require 'org-tempo))
+  (require 'org-tempo)
+  :hook
+  (org-mode . org-indent-mode))
 
 ;;; config.el ends here
